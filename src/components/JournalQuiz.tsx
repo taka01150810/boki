@@ -1,0 +1,364 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { journalQuestions } from "@/data/journal-questions";
+import type { JournalLine } from "@/data/types";
+import {
+  emptyEntry,
+  formatAmount,
+  grade,
+  type EntryRow,
+  type GradeResult,
+  type QuizEntry,
+} from "@/lib/grading";
+import { useProgress } from "@/lib/useProgress";
+
+type Side = "debit" | "credit";
+
+export default function JournalQuiz() {
+  const {
+    hydrated,
+    progress,
+    recordResult,
+    setCurrentIndex,
+    reset,
+    answeredCount,
+    correctCount,
+    accuracy,
+  } = useProgress();
+
+  const [index, setIndex] = useState(0);
+  const [entry, setEntry] = useState<QuizEntry>(emptyEntry);
+  const [result, setResult] = useState<GradeResult | null>(null);
+
+  const question = journalQuestions[index];
+  const total = journalQuestions.length;
+
+  // 保存された再開位置をマウント後に反映（初回ハイドレーション時のみ）
+  useEffect(() => {
+    if (hydrated) {
+      const saved = Math.min(progress.currentIndex, total - 1);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIndex(saved < 0 ? 0 : saved);
+    }
+    // progress.currentIndex は初回反映のみ狙うため依存に入れない
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
+
+  const accountOptions = useMemo(
+    () => question.accounts,
+    [question],
+  );
+
+  function updateRow(side: Side, rowIdx: number, patch: Partial<EntryRow>) {
+    setEntry((prev) => {
+      const rows = prev[side].map((r, i) =>
+        i === rowIdx ? { ...r, ...patch } : r,
+      );
+      return { ...prev, [side]: rows };
+    });
+  }
+
+  function handleSubmit() {
+    if (result) return;
+    const g = grade(entry, question);
+    setResult(g);
+    recordResult(question.id, g.correct);
+  }
+
+  function goTo(nextIndex: number) {
+    const clamped = Math.max(0, Math.min(nextIndex, total - 1));
+    setIndex(clamped);
+    setCurrentIndex(clamped);
+    setEntry(emptyEntry());
+    setResult(null);
+  }
+
+  const isLast = index === total - 1;
+
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      {/* 進捗バー */}
+      <header className="flex items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span className="font-semibold">
+            第{question.no}問 / 全{total}問
+          </span>
+          <span className="text-zinc-500 dark:text-zinc-400">
+            解答済み {answeredCount}問
+          </span>
+          <span className="text-zinc-500 dark:text-zinc-400">
+            正答率 <span className="font-semibold text-zinc-900 dark:text-zinc-100">{accuracy}%</span>
+            <span className="ml-1 text-xs">({correctCount}/{answeredCount})</span>
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm("進捗をリセットしますか？")) {
+              reset();
+              goTo(0);
+            }
+          }}
+          className="shrink-0 rounded-md px-2 py-1 text-xs text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+        >
+          リセット
+        </button>
+      </header>
+
+      {/* 問題文 */}
+      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="mb-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+          {question.title}
+        </h2>
+        <p className="leading-7 text-zinc-800 dark:text-zinc-100">{question.text}</p>
+      </section>
+
+      {/* 入力欄 */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <SideTable
+          label="借方"
+          side="debit"
+          rows={entry.debit}
+          options={accountOptions}
+          disabled={!!result}
+          correct={result?.debitCorrect}
+          onChange={updateRow}
+        />
+        <SideTable
+          label="貸方"
+          side="credit"
+          rows={entry.credit}
+          options={accountOptions}
+          disabled={!!result}
+          correct={result?.creditCorrect}
+          onChange={updateRow}
+        />
+      </section>
+
+      {/* アクション & 判定 */}
+      {!result ? (
+        <button
+          type="button"
+          onClick={handleSubmit}
+          className="mx-auto w-full max-w-xs rounded-full bg-emerald-600 py-3 font-semibold text-white transition-colors hover:bg-emerald-700 active:scale-[0.99]"
+        >
+          解答する
+        </button>
+      ) : (
+        <ResultPanel
+          result={result}
+          debit={question.debit}
+          credit={question.credit}
+          isLast={isLast}
+          onNext={() => goTo(index + 1)}
+          onRetry={() => {
+            setEntry(emptyEntry());
+            setResult(null);
+          }}
+        />
+      )}
+
+      {/* 問題ナビ */}
+      <nav className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
+        <button
+          type="button"
+          onClick={() => goTo(index - 1)}
+          disabled={index === 0}
+          className="rounded-md px-3 py-1 transition-colors enabled:hover:bg-zinc-100 disabled:opacity-40 dark:enabled:hover:bg-zinc-800"
+        >
+          ← 前の問題
+        </button>
+        <button
+          type="button"
+          onClick={() => goTo(index + 1)}
+          disabled={isLast}
+          className="rounded-md px-3 py-1 transition-colors enabled:hover:bg-zinc-100 disabled:opacity-40 dark:enabled:hover:bg-zinc-800"
+        >
+          次の問題 →
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+function SideTable({
+  label,
+  side,
+  rows,
+  options,
+  disabled,
+  correct,
+  onChange,
+}: {
+  label: string;
+  side: Side;
+  rows: EntryRow[];
+  options: string[];
+  disabled: boolean;
+  correct?: boolean;
+  onChange: (side: Side, rowIdx: number, patch: Partial<EntryRow>) => void;
+}) {
+  const borderColor =
+    correct === undefined
+      ? "border-zinc-200 dark:border-zinc-800"
+      : correct
+        ? "border-emerald-400 dark:border-emerald-600"
+        : "border-rose-400 dark:border-rose-600";
+
+  return (
+    <div className={`rounded-xl border ${borderColor} bg-white p-4 dark:bg-zinc-900`}>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold">{label}</h3>
+        {correct !== undefined && (
+          <span
+            className={
+              correct
+                ? "text-xs font-semibold text-emerald-600 dark:text-emerald-400"
+                : "text-xs font-semibold text-rose-600 dark:text-rose-400"
+            }
+          >
+            {correct ? "OK" : "要確認"}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        {rows.map((row, i) => (
+          <div key={i} className="grid grid-cols-[1fr_auto] gap-2">
+            <select
+              value={row.account}
+              disabled={disabled}
+              onChange={(e) => onChange(side, i, { account: e.target.value })}
+              className="min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800"
+            >
+              <option value="">科目を選択</option>
+              {options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={row.amount}
+              disabled={disabled}
+              placeholder="金額"
+              onChange={(e) => onChange(side, i, { amount: e.target.value })}
+              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-2 text-right text-sm tabular-nums disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ResultPanel({
+  result,
+  debit,
+  credit,
+  isLast,
+  onNext,
+  onRetry,
+}: {
+  result: GradeResult;
+  debit: JournalLine[];
+  credit: JournalLine[];
+  isLast: boolean;
+  onNext: () => void;
+  onRetry: () => void;
+}) {
+  return (
+    <section
+      className={`rounded-xl border p-5 ${
+        result.correct
+          ? "border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40"
+          : "border-rose-300 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/40"
+      }`}
+    >
+      <p
+        className={`mb-4 text-lg font-bold ${
+          result.correct
+            ? "text-emerald-700 dark:text-emerald-300"
+            : "text-rose-700 dark:text-rose-300"
+        }`}
+      >
+        {result.correct ? "✅ 正解！" : "❌ 不正解"}
+      </p>
+
+      <div className="mb-4">
+        <p className="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+          正解の仕訳
+        </p>
+        <AnswerTable debit={debit} credit={credit} />
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        {!result.correct && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-full border border-zinc-300 px-5 py-2 text-sm font-medium transition-colors hover:bg-white dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            もう一度解く
+          </button>
+        )}
+        {!isLast ? (
+          <button
+            type="button"
+            onClick={onNext}
+            className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+          >
+            次の問題へ →
+          </button>
+        ) : (
+          <span className="self-center text-sm text-zinc-500 dark:text-zinc-400">
+            最後の問題です。おつかれさまでした！
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function AnswerTable({
+  debit,
+  credit,
+}: {
+  debit: JournalLine[];
+  credit: JournalLine[];
+}) {
+  const rowCount = Math.max(debit.length, credit.length);
+  const rows = Array.from({ length: rowCount }, (_, i) => ({
+    d: debit[i],
+    c: credit[i],
+  }));
+
+  return (
+    <table className="w-full border-collapse overflow-hidden rounded-md text-sm">
+      <thead>
+        <tr className="bg-zinc-100 text-left dark:bg-zinc-800">
+          <th className="px-3 py-1.5 font-medium">借方</th>
+          <th className="px-3 py-1.5 text-right font-medium">金額</th>
+          <th className="px-3 py-1.5 font-medium">貸方</th>
+          <th className="px-3 py-1.5 text-right font-medium">金額</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i} className="border-t border-zinc-200 dark:border-zinc-700">
+            <td className="px-3 py-1.5">{r.d?.account ?? ""}</td>
+            <td className="px-3 py-1.5 text-right tabular-nums">
+              {r.d ? formatAmount(r.d.amount) : ""}
+            </td>
+            <td className="px-3 py-1.5">{r.c?.account ?? ""}</td>
+            <td className="px-3 py-1.5 text-right tabular-nums">
+              {r.c ? formatAmount(r.c.amount) : ""}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}

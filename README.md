@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 簿記3級 仕訳 一問一答
 
-## Getting Started
+日商簿記3級の**仕訳問題**を1問ずつ解いて答え合わせできる学習アプリ。
+取引文を読み、借方・貸方の勘定科目（プルダウン）と金額を入力して「解答する」を押すと、自動採点して正誤と正解の仕訳を表示します。
 
-First, run the development server:
+## 動かすには
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install       # 依存インストール（初回のみ）
+npm run dev       # 開発サーバー起動 → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 構成
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### アプリ本体
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| ファイル | 役割 |
+| --- | --- |
+| [src/app/page.tsx](src/app/page.tsx) | トップページ |
+| [src/app/layout.tsx](src/app/layout.tsx) | `lang="ja"`・メタデータ |
+| [src/components/JournalQuiz.tsx](src/components/JournalQuiz.tsx) | 出題・入力・採点・結果表示 |
+| [src/data/types.ts](src/data/types.ts) | 型定義 |
+| [src/data/journal-questions.ts](src/data/journal-questions.ts) | 3級 仕訳15問 |
+| [src/lib/grading.ts](src/lib/grading.ts) | 金額正規化・順不同採点 |
+| [src/lib/useProgress.ts](src/lib/useProgress.ts) | localStorage 進捗管理 |
 
-## Learn More
+### ドキュメント
 
-To learn more about Next.js, take a look at the following resources:
+| ファイル | 役割 |
+| --- | --- |
+| [docs/DESIGN.md](docs/DESIGN.md) | 設計判断・採点ロジック・構成・拡張候補 |
+| [docs/boki3-workbook-01.md](docs/boki3-workbook-01.md) | 元データ（出典付き） |
+| [README.md](README.md) | 概要とコマンド |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 実装した機能
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 取引文表示 → 借方/貸方 各3行に「科目プルダウン＋金額入力」→「解答する」で自動採点
+- 採点は**順不同**、金額はカンマ・全角・￥を吸収（`1,300` ＝ `1300`）
+- 正誤バッジ＋正解の仕訳表を表示、不正解は「もう一度解く」
+- 1問ずつ連続出題、前/次ナビ
+- 進捗（正答率・解答済み数・再開位置）を localStorage に保存、リセット可
+- ライト/ダーク対応、レスポンシブ
 
-## Deploy on Vercel
+## スクリプト
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| コマンド | 内容 |
+| --- | --- |
+| `npm run dev` | 開発サーバー（<http://localhost:3000>） |
+| `npm run build` | 本番ビルド |
+| `npm start` | 本番サーバー |
+| `npm run lint` | ESLint |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 検証済み
+
+- `npm run build` ✅（型チェック・静的生成成功）
+- `npm run lint` ✅（エラー0）
+
+## 技術スタック
+
+Next.js 16（App Router）/ TypeScript / Tailwind CSS v4
