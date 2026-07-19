@@ -86,3 +86,10 @@ export function grade(entry: QuizEntry, question: JournalQuestion): GradeResult 
 export function formatAmount(n: number): string {
   return n.toLocaleString("ja-JP");
 }
+
+/** エポックミリ秒を "2026/07/20 14:32" 形式で表示（ロケール差を避け固定書式） */
+export function formatDateTime(ms: number): string {
+  const d = new Date(ms);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
