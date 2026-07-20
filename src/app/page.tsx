@@ -1,5 +1,5 @@
-import Link from "next/link";
 import ProgressBadge from "@/components/ProgressBadge";
+import SelectCard from "@/components/SelectCard";
 import { questionCountOfGrade, setsOfGrade } from "@/data/question-sets";
 
 /** トップは級の選択だけ。3級は問題集が1つなので、選択画面を挟まず出題へ直行する。 */
@@ -30,11 +30,7 @@ export default function Home() {
 
       <div className="mx-auto flex max-w-md flex-col gap-4">
         {entries.map(({ grade, href, caption }) => (
-          <Link
-            key={grade}
-            href={href}
-            className="rounded-xl border border-zinc-200 bg-white p-5 transition-colors hover:border-emerald-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-600"
-          >
+          <SelectCard key={grade} href={href} className="p-5">
             <div className="flex items-baseline justify-between">
               <span className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
                 {grade}
@@ -44,7 +40,7 @@ export default function Home() {
               </span>
             </div>
             <ProgressBadge sets={setsOfGrade(grade)} />
-          </Link>
+          </SelectCard>
         ))}
       </div>
     </main>

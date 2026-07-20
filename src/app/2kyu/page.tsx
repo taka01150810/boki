@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ProgressBadge from "@/components/ProgressBadge";
+import SelectCard from "@/components/SelectCard";
 import { setsOfGrade } from "@/data/question-sets";
 
 export const metadata = {
@@ -23,11 +24,7 @@ export default function Grade2Index() {
 
       <div className="mx-auto flex max-w-md flex-col gap-3">
         {sets.map((set) => (
-          <Link
-            key={set.id}
-            href={`/quiz/${set.id}`}
-            className="rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-emerald-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-600"
-          >
+          <SelectCard key={set.id} href={`/quiz/${set.id}`}>
             <div className="flex items-baseline justify-between gap-3">
               <span className="font-semibold text-zinc-900 dark:text-zinc-50">
                 {set.label}
@@ -40,7 +37,7 @@ export default function Grade2Index() {
               {set.topic}
             </p>
             <ProgressBadge sets={[set]} />
-          </Link>
+          </SelectCard>
         ))}
       </div>
 
