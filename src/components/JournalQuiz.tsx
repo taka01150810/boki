@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { journalQuestions } from "@/data/journal-questions";
-import type { JournalLine } from "@/data/types";
+import { questionKey } from "@/data/question-sets";
+import type { JournalLine, QuestionSet } from "@/data/types";
 import {
   emptyEntry,
   formatAmount,
@@ -13,48 +14,56 @@ import {
   type GradeResult,
   type QuizEntry,
 } from "@/lib/grading";
-import { useProgress, type Attempt } from "@/lib/useProgress";
+import { summarize, useProgress, type Attempt } from "@/lib/useProgress";
 
 type Side = "debit" | "credit";
 
-export default function JournalQuiz() {
+export default function JournalQuiz({ set }: { set: QuestionSet }) {
   const {
     hydrated,
     progress,
     recordResult,
     getHistory,
     setCurrentIndex,
-    reset,
-    answeredCount,
-    correctCount,
-    accuracy,
+    resetSet,
   } = useProgress();
 
   const [index, setIndex] = useState(0);
-  const [entry, setEntry] = useState<QuizEntry>(emptyEntry);
+  const [entry, setEntry] = useState<QuizEntry>(() =>
+    emptyEntry(set.questions[0]),
+  );
   const [result, setResult] = useState<GradeResult | null>(null);
 
-  const question = journalQuestions[index];
-  const total = journalQuestions.length;
+  const question = set.questions[index];
+  const total = set.questions.length;
 
   // この問題の過去の解答履歴（古い順に積み重なる）
-  const history = getHistory(question.id);
+  const history = getHistory(set.id, question.id);
+
+  // このセットぶんの集計（他のセットの成績は混ぜない）
+  const { answeredCount, correctCount, accuracy } = useMemo(
+    () =>
+      summarize(
+        progress.attempts,
+        set.questions.map((q) => questionKey(set.id, q.id)),
+      ),
+    [progress.attempts, set],
+  );
 
   // 保存された再開位置をマウント後に反映（初回ハイドレーション時のみ）
   useEffect(() => {
     if (hydrated) {
-      const saved = Math.min(progress.currentIndex, total - 1);
+      const saved = Math.min(progress.currentIndex[set.id] ?? 0, total - 1);
+      const next = saved < 0 ? 0 : saved;
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIndex(saved < 0 ? 0 : saved);
+      setIndex(next);
+      setEntry(emptyEntry(set.questions[next]));
     }
     // progress.currentIndex は初回反映のみ狙うため依存に入れない
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  const accountOptions = useMemo(
-    () => question.accounts,
-    [question],
-  );
+  const accountOptions = useMemo(() => question.accounts, [question]);
 
   function updateRow(side: Side, rowIdx: number, patch: Partial<EntryRow>) {
     setEntry((prev) => {
@@ -69,14 +78,14 @@ export default function JournalQuiz() {
     if (result) return;
     const g = grade(entry, question);
     setResult(g);
-    recordResult(question.id, g.correct);
+    recordResult(set.id, question.id, g.correct);
   }
 
   function goTo(nextIndex: number) {
     const clamped = Math.max(0, Math.min(nextIndex, total - 1));
     setIndex(clamped);
-    setCurrentIndex(clamped);
-    setEntry(emptyEntry());
+    setCurrentIndex(set.id, clamped);
+    setEntry(emptyEntry(set.questions[clamped]));
     setResult(null);
   }
 
@@ -101,8 +110,11 @@ export default function JournalQuiz() {
         <button
           type="button"
           onClick={() => {
-            if (confirm("進捗をリセットしますか？")) {
-              reset();
+            if (confirm(`${set.label}の進捗をリセットしますか？`)) {
+              resetSet(
+                set.id,
+                set.questions.map((q) => q.id),
+              );
               goTo(0);
             }
           }}
