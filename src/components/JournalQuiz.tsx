@@ -119,8 +119,8 @@ export default function JournalQuiz() {
         <p className="leading-7 text-zinc-800 dark:text-zinc-100">{question.text}</p>
       </section>
 
-      {/* 入力欄 */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* 入力欄（スマホでも借方・貸方を横並びに保つ） */}
+      <section className="grid grid-cols-2 gap-2 sm:gap-4">
         <SideTable
           label="借方"
           side="debit"
@@ -253,9 +253,9 @@ function SideTable({
         : "border-rose-400 dark:border-rose-600";
 
   return (
-    <div className={`rounded-xl border ${borderColor} bg-white p-4 dark:bg-zinc-900`}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold">{label}</h3>
+    <div className={`rounded-xl border ${borderColor} bg-white p-2.5 dark:bg-zinc-900 sm:p-4`}>
+      <div className="mb-2 flex items-center justify-between sm:mb-3">
+        <h3 className="text-sm font-semibold sm:text-base">{label}</h3>
         {correct !== undefined && (
           <span
             className={
@@ -270,12 +270,15 @@ function SideTable({
       </div>
       <div className="flex flex-col gap-2">
         {rows.map((row, i) => (
-          <div key={i} className="grid grid-cols-[1fr_auto] gap-2">
+          <div
+            key={i}
+            className="grid grid-cols-[1fr_auto] gap-1 sm:gap-2"
+          >
             <select
               value={row.account}
               disabled={disabled}
               onChange={(e) => onChange(side, i, { account: e.target.value })}
-              className="min-w-0 rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800"
+              className="min-w-0 rounded-md border border-zinc-300 bg-white px-1.5 py-1.5 text-xs disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800 sm:px-2 sm:py-2 sm:text-sm"
             >
               <option value="">科目を選択</option>
               {options.map((opt) => (
@@ -291,7 +294,7 @@ function SideTable({
               disabled={disabled}
               placeholder="金額"
               onChange={(e) => onChange(side, i, { amount: e.target.value })}
-              className="w-24 rounded-md border border-zinc-300 bg-white px-2 py-2 text-right text-sm tabular-nums disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800"
+              className="w-14 rounded-md border border-zinc-300 bg-white px-1.5 py-1.5 text-right text-xs tabular-nums disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800 sm:w-24 sm:px-2 sm:py-2 sm:text-sm"
             />
           </div>
         ))}
@@ -382,29 +385,31 @@ function AnswerTable({
   }));
 
   return (
-    <table className="w-full border-collapse overflow-hidden rounded-md text-sm">
-      <thead>
-        <tr className="bg-zinc-100 text-left dark:bg-zinc-800">
-          <th className="px-3 py-1.5 font-medium">借方</th>
-          <th className="px-3 py-1.5 text-right font-medium">金額</th>
-          <th className="px-3 py-1.5 font-medium">貸方</th>
-          <th className="px-3 py-1.5 text-right font-medium">金額</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i} className="border-t border-zinc-200 dark:border-zinc-700">
-            <td className="px-3 py-1.5">{r.d?.account ?? ""}</td>
-            <td className="px-3 py-1.5 text-right tabular-nums">
-              {r.d ? formatAmount(r.d.amount) : ""}
-            </td>
-            <td className="px-3 py-1.5">{r.c?.account ?? ""}</td>
-            <td className="px-3 py-1.5 text-right tabular-nums">
-              {r.c ? formatAmount(r.c.amount) : ""}
-            </td>
+    <div className="overflow-x-auto rounded-md">
+      <table className="w-full min-w-[20rem] border-collapse text-xs sm:text-sm">
+        <thead>
+          <tr className="bg-zinc-100 text-left dark:bg-zinc-800">
+            <th className="px-2 py-1.5 font-medium sm:px-3">借方</th>
+            <th className="px-2 py-1.5 text-right font-medium sm:px-3">金額</th>
+            <th className="px-2 py-1.5 font-medium sm:px-3">貸方</th>
+            <th className="px-2 py-1.5 text-right font-medium sm:px-3">金額</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t border-zinc-200 dark:border-zinc-700">
+              <td className="px-2 py-1.5 sm:px-3">{r.d?.account ?? ""}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">
+                {r.d ? formatAmount(r.d.amount) : ""}
+              </td>
+              <td className="px-2 py-1.5 sm:px-3">{r.c?.account ?? ""}</td>
+              <td className="px-2 py-1.5 text-right tabular-nums sm:px-3">
+                {r.c ? formatAmount(r.c.amount) : ""}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
