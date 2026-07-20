@@ -3,6 +3,12 @@
 日商簿記3級の**仕訳問題**を1問ずつ解いて答え合わせできる学習アプリ。
 取引文を読み、借方・貸方の勘定科目（プルダウン）と金額を入力して「解答する」を押すと、自動採点して正誤と正解の仕訳を表示します。
 
+## 公開URL
+
+<https://taka01150810.github.io/boki/>
+
+`main` への push で GitHub Actions が自動ビルド・デプロイします（[.github/workflows](.github/workflows)）。
+
 ## 動かすには
 
 ```bash
