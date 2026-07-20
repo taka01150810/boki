@@ -58,3 +58,7 @@ npm run dev       # 開発サーバー起動 → http://localhost:3000
 ## 技術スタック
 
 Next.js 16（App Router）/ TypeScript / Tailwind CSS v4
+
+## 参考
+
+出題形式は [いぬぼき 2級 仕訳問題](https://inuboki.com/2q-siwake/) を参考にしています。詳細は [docs/DESIGN.md](docs/DESIGN.md#参考にしたサイト) を参照。
