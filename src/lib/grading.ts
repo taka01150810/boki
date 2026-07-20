@@ -40,6 +40,16 @@ export function parseAmount(raw: string): number | null {
   return Number(normalized);
 }
 
+/**
+ * 金額入力欄用のサニタイズ。全角数字を半角へ変換し、数字以外を除去する。
+ * （入力時点で数字だけしか残らないようにするため）
+ */
+export function toAmountInput(raw: string): string {
+  return raw
+    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[^0-9]/g, "");
+}
+
 /** 入力行を採点用の JournalLine へ変換（未入力・不正な行は除外） */
 function toLines(rows: EntryRow[]): JournalLine[] {
   const lines: JournalLine[] = [];

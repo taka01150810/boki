@@ -8,6 +8,7 @@ import {
   formatAmount,
   formatDateTime,
   grade,
+  toAmountInput,
   type EntryRow,
   type GradeResult,
   type QuizEntry,
@@ -290,10 +291,13 @@ function SideTable({
             <input
               type="text"
               inputMode="numeric"
+              pattern="[0-9]*"
               value={row.amount}
               disabled={disabled}
               placeholder="金額"
-              onChange={(e) => onChange(side, i, { amount: e.target.value })}
+              onChange={(e) =>
+                onChange(side, i, { amount: toAmountInput(e.target.value) })
+              }
               className="w-14 rounded-md border border-zinc-300 bg-white px-1.5 py-1.5 text-right text-xs tabular-nums disabled:opacity-70 dark:border-zinc-700 dark:bg-zinc-800 sm:w-24 sm:px-2 sm:py-2 sm:text-sm"
             />
           </div>
