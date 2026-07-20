@@ -1,11 +1,11 @@
-import type { JournalQuestion } from "./types";
+import type { JournalQuestion, QuestionSet } from "../types";
 
 /**
  * 日商簿記3級 仕訳問題集①（15問）
  * 出典: https://moneyfriends-blog.com/boki3-workbook-01/
- * 元データ: docs/boki3-workbook-01.md
+ * 元データ: docs/3級/boki3-workbook-01.md
  */
-export const journalQuestions: JournalQuestion[] = [
+const questions: JournalQuestion[] = [
   {
     id: "q1",
     no: 1,
@@ -201,3 +201,12 @@ export const journalQuestions: JournalQuestion[] = [
     credit: [{ account: "買掛金", amount: 14300 }],
   },
 ];
+
+export const g301: QuestionSet = {
+  id: "g3-01",
+  grade: "3級",
+  label: "仕訳問題集①",
+  topic: "3級 仕訳総合",
+  source: "https://moneyfriends-blog.com/boki3-workbook-01/",
+  questions,
+};

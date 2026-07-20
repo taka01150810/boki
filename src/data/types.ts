@@ -36,3 +36,17 @@ export interface JournalQuestion {
 
 /** 出題元の級 */
 export type Grade = "3級" | "2級";
+
+/** 1つの問題集（3級は1セット、2級は①〜⑧の8セット） */
+export interface QuestionSet {
+  /** セットID（例: "g3-01", "g2-03"）。localStorage のキーにも使う。 */
+  id: string;
+  grade: Grade;
+  /** 表示名（例: "仕訳問題集③"） */
+  label: string;
+  /** 扱う論点（例: "有価証券"） */
+  topic: string;
+  /** 出典URL */
+  source: string;
+  questions: JournalQuestion[];
+}
