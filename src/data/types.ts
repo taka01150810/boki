@@ -23,9 +23,14 @@ export interface JournalQuestion {
    * 正解に含まれない科目（ダミー）も混ざっている。
    */
   accounts: string[];
-  /** 正解の借方（順不同で採点） */
+  /**
+   * 正解が「仕訳なし」の問題。
+   * 空欄のまま提出しても正解になってしまわないよう、UI では専用のチェックで解答させる。
+   */
+  noJournal?: boolean;
+  /** 正解の借方（順不同で採点）。noJournal のときは空。 */
   debit: JournalLine[];
-  /** 正解の貸方（順不同で採点） */
+  /** 正解の貸方（順不同で採点）。noJournal のときは空。 */
   credit: JournalLine[];
 }
 

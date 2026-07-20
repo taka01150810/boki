@@ -127,7 +127,7 @@ export default function JournalQuiz() {
           side="debit"
           rows={entry.debit}
           options={accountOptions}
-          disabled={!!result}
+          disabled={!!result || entry.noJournal}
           correct={result?.debitCorrect}
           onChange={updateRow}
         />
@@ -136,11 +136,25 @@ export default function JournalQuiz() {
           side="credit"
           rows={entry.credit}
           options={accountOptions}
-          disabled={!!result}
+          disabled={!!result || entry.noJournal}
           correct={result?.creditCorrect}
           onChange={updateRow}
         />
       </section>
+
+      {/* 「仕訳なし」も解答の1つ（空欄のまま提出とは区別する） */}
+      <label className="mx-auto flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+        <input
+          type="checkbox"
+          checked={entry.noJournal}
+          disabled={!!result}
+          onChange={(e) =>
+            setEntry((prev) => ({ ...prev, noJournal: e.target.checked }))
+          }
+          className="size-4 accent-emerald-600"
+        />
+        仕訳なし
+      </label>
 
       {/* アクション & 判定 */}
       {!result ? (
@@ -156,14 +170,23 @@ export default function JournalQuiz() {
           result={result}
           debit={question.debit}
           credit={question.credit}
+          noJournal={!!question.noJournal}
           isLast={isLast}
           onNext={() => goTo(index + 1)}
           onRetry={() => {
-            setEntry(emptyEntry());
+            setEntry(emptyEntry(question));
             setResult(null);
           }}
         />
       )}
+
+      {/* 一覧へ戻る（2級は問題集一覧、3級は級選択へ） */}
+      <Link
+        href={set.grade === "2級" ? "/2kyu" : "/"}
+        className="mx-auto text-sm text-zinc-500 underline-offset-4 hover:underline dark:text-zinc-400"
+      >
+        ← {set.grade === "2級" ? "2級の問題集一覧" : "級の選択"}へ戻る
+      </Link>
 
       {/* 問題ナビ */}
       <nav className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
@@ -311,6 +334,7 @@ function ResultPanel({
   result,
   debit,
   credit,
+  noJournal,
   isLast,
   onNext,
   onRetry,
@@ -318,6 +342,7 @@ function ResultPanel({
   result: GradeResult;
   debit: JournalLine[];
   credit: JournalLine[];
+  noJournal: boolean;
   isLast: boolean;
   onNext: () => void;
   onRetry: () => void;
@@ -344,7 +369,13 @@ function ResultPanel({
         <p className="mb-2 text-sm font-semibold text-zinc-600 dark:text-zinc-300">
           正解の仕訳
         </p>
-        <AnswerTable debit={debit} credit={credit} />
+        {noJournal ? (
+          <p className="rounded-md bg-white/60 px-3 py-2 text-sm font-semibold dark:bg-zinc-900/60">
+            仕訳なし
+          </p>
+        ) : (
+          <AnswerTable debit={debit} credit={credit} />
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">

@@ -14,16 +14,30 @@ export const emptyRow = (): EntryRow => ({ account: "", amount: "" });
 export interface QuizEntry {
   debit: EntryRow[];
   credit: EntryRow[];
+  /** 「仕訳なし」を選んだか */
+  noJournal: boolean;
 }
 
-/** 固定行数（借方・貸方とも） */
-export const ROWS = 3;
+/** 最低限そろえる行数（借方・貸方とも） */
+export const MIN_ROWS = 3;
 
-/** 初期入力（借方3行・貸方3行の空欄） */
-export const emptyEntry = (): QuizEntry => ({
-  debit: Array.from({ length: ROWS }, emptyRow),
-  credit: Array.from({ length: ROWS }, emptyRow),
-});
+/**
+ * その問題に必要な入力行数。
+ * 正解が3行を超える問題（のれん・連結など）だけ欄が増える。
+ */
+export function rowCount(question: JournalQuestion): number {
+  return Math.max(MIN_ROWS, question.debit.length, question.credit.length);
+}
+
+/** 空の入力（行数は問題に合わせる） */
+export const emptyEntry = (question: JournalQuestion): QuizEntry => {
+  const n = rowCount(question);
+  return {
+    debit: Array.from({ length: n }, emptyRow),
+    credit: Array.from({ length: n }, emptyRow),
+    noJournal: false,
+  };
+};
 
 /**
  * 金額の生入力を数値へ正規化する。
@@ -81,8 +95,18 @@ export interface GradeResult {
   creditCorrect: boolean;
 }
 
-/** 入力を正解と照合する。借方・貸方とも順不同で過不足なく一致すれば正解。 */
+/**
+ * 入力を正解と照合する。借方・貸方とも順不同で過不足なく一致すれば正解。
+ *
+ * 「仕訳なし」は空欄と区別する必要がある（空欄のまま提出＝正解、では判断を問えない）。
+ * そのため専用のチェックを立てたときだけ正解になり、
+ * 逆に仕訳が必要な問題でチェックを立てれば不正解にする。
+ */
 export function grade(entry: QuizEntry, question: JournalQuestion): GradeResult {
+  if (question.noJournal || entry.noJournal) {
+    const correct = !!question.noJournal && entry.noJournal;
+    return { correct, debitCorrect: correct, creditCorrect: correct };
+  }
   const debitCorrect = linesEqual(toLines(entry.debit), question.debit);
   const creditCorrect = linesEqual(toLines(entry.credit), question.credit);
   return {
