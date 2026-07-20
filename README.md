@@ -42,12 +42,15 @@ npm run dev       # 開発サーバー起動 → http://localhost:3000
 | [src/app/2kyu/page.tsx](src/app/2kyu/page.tsx) | 2級の問題集一覧 |
 | [src/app/quiz/[setId]/page.tsx](src/app/quiz/[setId]/page.tsx) | 出題ページ（全問題集を静的生成） |
 | [src/app/layout.tsx](src/app/layout.tsx) | `lang="ja"`・メタデータ |
-| [src/components/JournalQuiz.tsx](src/components/JournalQuiz.tsx) | 出題・入力・採点・結果表示 |
+| [src/components/JournalQuiz.tsx](src/components/JournalQuiz.tsx) | 出題画面の組み立て |
+| [src/components/quiz/](src/components/quiz/) | 出題画面のパーツ（ヘッダ・入力欄・結果・ナビ・履歴） |
 | [src/components/ProgressBadge.tsx](src/components/ProgressBadge.tsx) | 選択画面の進捗バッジ |
+| [src/components/SelectCard.tsx](src/components/SelectCard.tsx) | 選択画面のカード |
 | [src/data/types.ts](src/data/types.ts) | 型定義 |
 | [src/data/question-sets.ts](src/data/question-sets.ts) | 問題集レジストリ |
 | [src/data/questions/](src/data/questions/) | 問題データ（`g3-01` / `g2-01`〜`g2-08`） |
 | [src/lib/grading.ts](src/lib/grading.ts) | 金額正規化・順不同採点 |
+| [src/lib/useQuizSession.ts](src/lib/useQuizSession.ts) | 出題画面の状態（位置・入力・採点結果） |
 | [src/lib/useProgress.ts](src/lib/useProgress.ts) | localStorage 進捗管理 |
 | [scripts/convert-2kyu.mjs](scripts/convert-2kyu.mjs) | `docs/2級/*.md` → 2級データを生成 |
 

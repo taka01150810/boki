@@ -67,8 +67,17 @@ src/
 │   ├── 2kyu/page.tsx       # 2級の問題集一覧
 │   └── quiz/[setId]/page.tsx # 出題（generateStaticParams で全セットを静的生成）
 ├── components/
-│   ├── JournalQuiz.tsx     # 出題・入力・採点・結果表示（クライアントコンポーネント）
-│   └── ProgressBadge.tsx   # 選択画面の進捗バッジ（クライアントコンポーネント）
+│   ├── JournalQuiz.tsx     # 出題画面の組み立てだけ（クライアントコンポーネント）
+│   ├── ProgressBadge.tsx   # 選択画面の進捗バッジ（クライアントコンポーネント）
+│   ├── SelectCard.tsx      # 選択画面のカード1枚ぶんの体裁
+│   └── quiz/               # 出題画面のパーツ
+│       ├── QuizHeader.tsx  #   現在位置・成績・リセット
+│       ├── EntryForm.tsx   #   借方/貸方の入力欄 +「仕訳なし」
+│       ├── SideTable.tsx   #   片側ぶんの入力表
+│       ├── ResultPanel.tsx #   正誤バッジ・正解表示・次アクション
+│       ├── AnswerTable.tsx #   正解の仕訳表
+│       ├── QuestionNav.tsx #   一覧へ戻る・前/次
+│       └── HistoryLog.tsx  #   その問題の解答履歴
 ├── data/
 │   ├── types.ts            # JournalQuestion / JournalLine / QuestionSet などの型
 │   ├── question-sets.ts    # 問題集レジストリ・questionKey
@@ -77,6 +86,7 @@ src/
 │       └── g2-01.ts 〜 g2-08.ts # 2級 190問（スクリプト生成・手で編集しない）
 └── lib/
     ├── grading.ts          # 金額正規化・順不同採点・行数算出・金額整形
+    ├── useQuizSession.ts   # 出題位置・入力・採点結果をまとめた画面状態フック
     └── useProgress.ts      # localStorage への進捗保存フック
 scripts/
 └── convert-2kyu.mjs        # docs/2級/*.md → src/data/questions/g2-0N.ts
@@ -85,6 +95,16 @@ docs/
 ├── 2級/boki2-siwake-01〜08.md # 元の問題データ（出典付き）
 └── DESIGN.md               # 本ドキュメント
 ```
+
+## コンポーネントの分け方
+
+出題画面は「状態」と「見た目」を分けている。
+
+- [useQuizSession](../src/lib/useQuizSession.ts) — 出題位置・入力・採点結果と、それを動かす操作（`submit` / `goTo` / `retry` など）を1か所に集める。永続化は `useProgress` に委ねる。
+- [JournalQuiz](../src/components/JournalQuiz.tsx) — フックから受け取った値をパーツに配るだけ。ロジックを持たない。
+- [components/quiz/](../src/components/quiz/) — 画面のパーツ。いずれも props だけで描画でき、状態を持たない。
+
+パーツを足すときは `components/quiz/` に置き、状態が必要なら `useQuizSession` 側に寄せる。
 
 ## 2級データの生成
 
