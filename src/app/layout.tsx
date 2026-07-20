@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "簿記3級 仕訳 一問一答",
-  description: "日商簿記3級の仕訳問題を1問ずつ解いて答え合わせできる学習アプリ",
+  title: "簿記 仕訳 一問一答",
+  description: "簿記の仕訳問題を1問ずつ解いて答え合わせできる学習アプリ",
 };
 
 export default function RootLayout({
